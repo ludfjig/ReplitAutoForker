@@ -20,7 +20,9 @@
 
   let s = document.getElementById("__NEXT_DATA__");
   let m = s.text.match('Repl:([^\"]+)\"');
+  let t = s.text.match('\"title\":\"([^\"]+)\"');
   let replitId = m[1];
+  let replitTitle = t[1];
 
   let forkButton = document.createElement("button");
   forkButton.id = "forkBtn";
@@ -46,12 +48,18 @@
   forkButton.after(urlButton);
 
 
+
   async function fork(replitId) {
     ids.length = 0;
     document.getElementById("forkBtn").disabled = true;
     const numForks = document.getElementById("numb").value;
 
     for (let i = 0; i < numForks; i++) {
+      if (i > 0 && i % 5 == 0) {
+        console.log("waiting 30s to avoid rate limiting...")
+        await new Promise(resolve => setTimeout(resolve, 30000)); // avoid server error
+      }
+
       try {
         let res = await fetch("https://replit.com/graphql", {
           "headers": {
@@ -64,7 +72,7 @@
             "sec-fetch-site": "same-origin",
             "x-requested-with": "XMLHttpRequest"
           },
-          "body": "[{\"operationName\":\"ForkReplCreateRepl\",\"variables\":{\"input\":{\"originId\":\"" + replitId + "\",\"teamId\":null,\"title\":\"test replit fork5\",\"forkToPersonal\":true}},\"query\":\"mutation ForkReplCreateRepl($input: CreateReplInput!) {\\n  createRepl(input: $input) {\\n    ... on Repl {\\n      id\\n      url\\n      isPrivate\\n      language\\n      origin {\\n        id\\n        isOwner\\n        __typename\\n      }\\n      source {\\n        release {\\n          id\\n          repl {\\n            id\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    ... on UserError {\\n      message\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]",
+          "body": "[{\"operationName\":\"ForkReplCreateRepl\",\"variables\":{\"input\":{\"originId\":\"" + replitId + "\",\"teamId\":null,\"title\":\"" + replitTitle + "\",\"forkToPersonal\":true}},\"query\":\"mutation ForkReplCreateRepl($input: CreateReplInput!) {\\n  createRepl(input: $input) {\\n    ... on Repl {\\n      id\\n      url\\n      isPrivate\\n      language\\n      origin {\\n        id\\n        isOwner\\n        __typename\\n      }\\n      source {\\n        release {\\n          id\\n          repl {\\n            id\\n            __typename\\n          }\\n          __typename\\n        }\\n        __typename\\n      }\\n      __typename\\n    }\\n    ... on UserError {\\n      message\\n      __typename\\n    }\\n    __typename\\n  }\\n}\\n\"}]",
           "method": "POST",
           "mode": "cors",
           "credentials": "include",
@@ -76,8 +84,7 @@
       } catch (err) {
         handleError(err);
       }
-    }
-
+    } 
     document.getElementById("getlinks").disabled = false;
   }
 
@@ -113,9 +120,10 @@
       });
       await statusCheck(res);
       res = await res.json();
-
       const url = res[0].data.refreshMultiplayerInviteLink.inviteUrl;
       urls.push("https://replit.com" + url);
+      await new Promise(resolve => setTimeout(resolve, 1000)); // avoid server error
+
     }
 
     let string = "";

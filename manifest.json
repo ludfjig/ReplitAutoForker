@@ -1,7 +1,7 @@
 {
     "name": "Replit Auto Forker",
     "description": "Forks replits and gets invite links automatically",
-    "version": "0.0.1",
+    "version": "0.0.2",
     "manifest_version": 3,
     "host_permissions": [
         "*://replit.com/"
